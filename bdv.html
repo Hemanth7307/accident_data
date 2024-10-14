@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>USA Accident Heatmap Dashboard</title>
+    <script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
+    <script src="https://d3js.org/d3.v7.min.js"></script>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            text-align: center;
+        }
+        #map {
+            width: 80%;
+            height: 80vh;
+            margin: 0 auto;
+        }
+    </style>
+</head>
+<body>
+
+    <h1>USA Accident Heatmap</h1>
+    <div id="map"></div>
+
+    <script>
+        // Load CSV file using d3.js
+        d3.csv("accident_data.csv").then(data => {
+            // Initialize a dictionary to hold the accident count per state
+            const accidentCounts = {};
+            const latitudes = [];
+            const longitudes = [];
+
+            // Iterate through the data to count accidents per state
+            data.forEach(row => {
+                const state = row.State; // Get the state from the row
+                const lat = parseFloat(row.Start_Lat); // Get latitude
+                const lng = parseFloat(row.Start_Lng); // Get longitude
+
+                if (state) { // Check if state is not null
+                    accidentCounts[state] = (accidentCounts[state] || 0) + 1; // Increment the count
+                }
+                
+                // Collect latitude and longitude for plotting
+                if (!isNaN(lat) && !isNaN(lng) && lat && lng) {
+                    latitudes.push(lat);
+                    longitudes.push(lng);
+                }
+            });
+
+            // Convert the dictionary to arrays for Plotly
+            const states = Object.keys(accidentCounts);
+            const counts = Object.values(accidentCounts);
+
+            // Create a choropleth map for the USA heatmap
+            const plotData = [{
+                type: 'choropleth',
+                locationmode: 'USA-states',
+                locations: states,
+                z: counts,
+                colorscale: 'Reds', // Change color scale to Reds for heatmap effect
+                colorbar: {
+                    title: 'Number of Accidents'
+                }
+            }];
+
+            // Set layout for the map
+            const layout = {
+                title: 'USA Accident Heatmap',
+                geo: {
+                    scope: 'usa',
+                    showlakes: true,
+                    lakecolor: 'rgb(255, 255, 255)',
+                }
+            };
+
+            // Plot the map in the div with id 'map'
+            Plotly.newPlot('map', plotData, layout);
+        }).catch(error => {
+            console.error('Error loading the CSV file:', error);
+        });
+    </script>
+
+</body>
+</html>
